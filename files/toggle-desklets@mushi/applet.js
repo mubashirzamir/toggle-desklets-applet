@@ -3,26 +3,30 @@ const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
 const Main = imports.ui.main;
 
+//----------------------------------------------------------------------
+//
+// Constants
+//
+//----------------------------------------------------------------------
+
+const TESTING = false
+const UUID = TESTING ? "toggle-desklets@mushi-testing" : "toggle-desklets@mushi";
+
 function MyApplet(metadata, orientation, panel_height, instance_id) {
     this._init(metadata, orientation, panel_height, instance_id);
 }
 
 MyApplet.prototype = {
-    __proto__: Applet.TextApplet.prototype,
+    __proto__: Applet.IconApplet.prototype,
 
     _init: function(metadata, orientation, panel_height, instance_id) {
-        Applet.TextApplet.prototype._init.call(this, orientation, panel_height, instance_id);
-        let TESTING = false;
-        this.set_applet_label("📎️");
+        Applet.IconApplet.prototype._init.call(this, orientation, panel_height, instance_id);
+        this.set_applet_icon_symbolic_name("cs-desklets-symbolic");
         this.set_applet_tooltip("Toggle desklets");
 
         this._settings = new Gio.Settings({ schema: 'org.cinnamon' });
 
-        let uuid = metadata.uuid || 'toggle-desklets@mushi';
-
-        if (TESTING) {
-            uuid += '-testing';
-        }
+        let uuid = UUID
 
         this._cacheRoot = GLib.build_filenamev([GLib.get_user_cache_dir(), uuid]);
         this._cacheFile = GLib.build_filenamev([this._cacheRoot, 'desklet-toggle-cache.json']);
@@ -31,8 +35,6 @@ MyApplet.prototype = {
         GLib.mkdir_with_parents(this._cacheRoot, 0o755);
 
         this._cache = this._loadCache();
-
-        global.logError("[DeskletToggle] Applet initialized");
     },
 
     _loadCache: function() {
@@ -183,6 +185,5 @@ MyApplet.prototype = {
 };
 
 function main(metadata, orientation, panel_height, instance_id) {
-    global.logError("[DeskletToggle] main() called");
     return new MyApplet(metadata, orientation, panel_height, instance_id);
 }
