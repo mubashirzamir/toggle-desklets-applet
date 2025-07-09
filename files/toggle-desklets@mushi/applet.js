@@ -34,8 +34,9 @@ MyApplet.prototype = {
 
         GLib.mkdir_with_parents(this._cacheRoot, 0o755);
 
-        this._cache = this._loadCache();
+        this._refreshCache()
     },
+
 
     _loadCache: function() {
         try {
@@ -47,6 +48,10 @@ MyApplet.prototype = {
             global.logError("[DeskletToggle] Failed to load cache: " + e);
         }
         return [];
+    },
+
+    _refreshCache: function() {
+        this._cache = this._loadCache();
     },
 
     _saveCache: function(cacheArray) {
@@ -168,12 +173,9 @@ MyApplet.prototype = {
         } else {
             this._restoreConfigs();
 
+            this._refreshCache()
             let toEnable = this._cache.length > 0 ? this._cache : [];
             this._settings.set_strv('enabled-desklets', toEnable);
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
-            Main.deskletManager._onEnabledDeskletsChanged();
-                return GLib.SOURCE_REMOVE;  // run once
-            });
             global.logError(`[DeskletToggle] Re-enabled desklets from cache: ${toEnable.join(", ")}`);
 
             this._saveCache([]);
