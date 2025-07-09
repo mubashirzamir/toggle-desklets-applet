@@ -12,12 +12,17 @@ MyApplet.prototype = {
 
     _init: function(metadata, orientation, panel_height, instance_id) {
         Applet.TextApplet.prototype._init.call(this, orientation, panel_height, instance_id);
+        let TESTING = false;
         this.set_applet_label("📎️");
         this.set_applet_tooltip("Toggle desklets");
 
         this._settings = new Gio.Settings({ schema: 'org.cinnamon' });
 
-        const uuid = metadata.uuid || 'toggle-desklets@mushi';
+        let uuid = metadata.uuid || 'toggle-desklets@mushi';
+
+        if (TESTING) {
+            uuid += '-testing';
+        }
 
         this._cacheRoot = GLib.build_filenamev([GLib.get_user_cache_dir(), uuid]);
         this._cacheFile = GLib.build_filenamev([this._cacheRoot, 'desklet-toggle-cache.json']);
@@ -163,7 +168,10 @@ MyApplet.prototype = {
 
             let toEnable = this._cache.length > 0 ? this._cache : [];
             this._settings.set_strv('enabled-desklets', toEnable);
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 200, () => {
             Main.deskletManager._onEnabledDeskletsChanged();
+                return GLib.SOURCE_REMOVE;  // run once
+            });
             global.logError(`[DeskletToggle] Re-enabled desklets from cache: ${toEnable.join(", ")}`);
 
             this._saveCache([]);
